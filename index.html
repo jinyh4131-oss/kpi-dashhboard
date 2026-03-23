@@ -2423,7 +2423,10 @@ function renderHistContent() {
           grid: { color: 'rgba(0,0,0,0.06)' },
           ticks: {
             font: { size: 10 }, color: '#888',
-            callback: v => isSignal ? (v>=0?'+':'')+v+'%' : v+kpiDef.unit
+            callback: v => {
+                var fv = Number.isInteger(v) ? v : parseFloat(v.toFixed(1));
+                return isSignal ? (fv>=0?'+':'')+fv+'%' : fv+kpiDef.unit;
+              }
           },
           // 매출성장률: 0 기준선
           ...(isSignal ? { beginAtZero: false } : { beginAtZero: true })
