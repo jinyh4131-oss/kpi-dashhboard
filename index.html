@@ -1274,6 +1274,12 @@ function calcAvg(kpiKey, hasSignal) {
   } else {
     var curVals = vals.filter(d => d.cur !== null).map(d => d.cur);
     if (curVals.length === 0) return null;
+    // 공실은 합산, 나머지는 평균
+    var isVacancy = kpiKey === 'vacancy' || kpiKey.startsWith('vc_floor_');
+    if (isVacancy) {
+      var total = curVals.reduce((a,b) => a+b, 0);
+      return {cur: total, prev: null, yoy: null};
+    }
     var avg = curVals.reduce((a,b)=>a+b,0) / curVals.length;
     return {cur: +avg.toFixed(1), prev: null, yoy: null};
   }
@@ -1364,7 +1370,7 @@ function render(){
     ..._allHQ.filter(h=>h.name===hqFilter),
     ..._allHQ.filter(h=>h.name!==hqFilter).map(h=>({name:h.name,stores:[]}))
   ];
-  var html='<thead><tr><th class="th-corner" rowspan="3"></th><th class="th-avg" rowspan="3">전체<br>평균</th>';
+  var html='<thead><tr><th class="th-corner" rowspan="3"></th><th class="th-avg" rowspan="3">전체<br><span id="avg-label">평균</span></th>';
   visHQ.forEach((hq,hi)=>{
     var isFiltered=(hqFilter===hq.name);
     var isCollapsed=(hqFilter!==null&&!isFiltered);
@@ -3908,7 +3914,7 @@ function render(){
     ..._allHQ.filter(h=>h.name===hqFilter),
     ..._allHQ.filter(h=>h.name!==hqFilter).map(h=>({name:h.name,stores:[]}))
   ];
-  var html='<thead><tr><th class="th-corner" rowspan="3"></th><th class="th-avg" rowspan="3">전체<br>평균</th>';
+  var html='<thead><tr><th class="th-corner" rowspan="3"></th><th class="th-avg" rowspan="3">전체<br><span id="avg-label">평균</span></th>';
   visHQ.forEach((hq,hi)=>{
     var isFiltered=(hqFilter===hq.name);
     var isCollapsed=(hqFilter!==null&&!isFiltered);
