@@ -1939,6 +1939,7 @@ function openBrandPopup(storeName, kpiKey, anchorEl) {
   var popup = document.getElementById('brand-popup');
   popup.classList.add('active');
   document.getElementById('brand-popup-overlay').classList.add('active');
+  pushPopup('brand-popup');
   if (_ppSavedPos) {
     popup.style.left   = _ppSavedPos.left + 'px';
     popup.style.top    = _ppSavedPos.top  + 'px';
@@ -1988,7 +1989,7 @@ function positionPopup(popup, anchorEl) {
 }
 
 function closeBrandPopup(e) {
-  if (e && e.target !== document.getElementById('brand-popup-overlay')) return;
+  if (e && !e._force && e.target !== document.getElementById('brand-popup-overlay')) return;
   var popup = document.getElementById('brand-popup');
   var rect = popup.getBoundingClientRect();
   _ppSavedPos = { left: rect.left, top: rect.top, width: popup.offsetWidth, height: popup.offsetHeight };
@@ -2153,6 +2154,7 @@ function openPopupDrilldown(brandName) {
   dp.style.width = pw   + 'px';
   dp.style.height = '';
   dp.classList.add('active');
+  pushPopup('drill-popup');
 }
 
 function closePopupDrilldown() {
@@ -2162,6 +2164,7 @@ function closePopupDrilldown() {
 
 function closeDrillPopup() {
   document.getElementById('drill-popup').classList.remove('active');
+  _popupStack = _popupStack.filter(p => p !== 'drill-popup');
 }
 
 var _dpSortKey = 'y', _dpSortDir = -1;
@@ -2338,6 +2341,7 @@ function openHistPopup(storeName, anchorEl) {
     popup.style.height = '';
   }
   popup.classList.add('active');
+  pushPopup('hist-popup');
 }
 
 function switchHistTab(key, btn) {
@@ -2462,6 +2466,7 @@ function renderHistContent() {
 }
 
 function closeHistPopup() {
+  _popupStack = _popupStack.filter(p => p !== 'hist-popup');
   var popup = document.getElementById('hist-popup');
   var rect = popup.getBoundingClientRect();
   _histSavedPos = {left:rect.left, top:rect.top, width:popup.offsetWidth, height:popup.offsetHeight};
@@ -2582,6 +2587,7 @@ function openKpiPopup(storeName, kpiKey, anchorEl) {
     popup.style.height='';
   }
   popup.classList.add('active');
+  pushPopup('kpi-popup');
 }
 
 function renderKpiTabs(tabs, activeKey) {
@@ -2728,6 +2734,7 @@ function sortKpiPopup(key) {
 }
 
 function closeKpiPopup() {
+  _popupStack = _popupStack.filter(p => p !== 'kpi-popup');
   var popup=document.getElementById('kpi-popup');
   var rect=popup.getBoundingClientRect();
   _kpSavedPos={left:rect.left,top:rect.top,width:popup.offsetWidth,height:popup.offsetHeight};
@@ -4495,6 +4502,7 @@ function openBrandPopup(storeName, kpiKey, anchorEl) {
   var popup = document.getElementById('brand-popup');
   popup.classList.add('active');
   document.getElementById('brand-popup-overlay').classList.add('active');
+  pushPopup('brand-popup');
   if (_ppSavedPos) {
     popup.style.left   = _ppSavedPos.left + 'px';
     popup.style.top    = _ppSavedPos.top  + 'px';
@@ -4544,7 +4552,7 @@ function positionPopup(popup, anchorEl) {
 }
 
 function closeBrandPopup(e) {
-  if (e && e.target !== document.getElementById('brand-popup-overlay')) return;
+  if (e && !e._force && e.target !== document.getElementById('brand-popup-overlay')) return;
   var popup = document.getElementById('brand-popup');
   var rect = popup.getBoundingClientRect();
   _ppSavedPos = { left: rect.left, top: rect.top, width: popup.offsetWidth, height: popup.offsetHeight };
@@ -4767,6 +4775,7 @@ function openPopupDrilldown(brandName) {
   dp.style.width = pw   + 'px';
   dp.style.height = '';
   dp.classList.add('active');
+  pushPopup('drill-popup');
 }
 
 function closePopupDrilldown() {
@@ -4960,6 +4969,29 @@ loadVacancyData();
 
 
 
+
+// ── ESC 키 팝업 스택 관리 ──
+var _popupStack = [];
+
+function pushPopup(id) {
+  // 이미 스택에 있으면 제거 후 다시 추가 (최신으로)
+  _popupStack = _popupStack.filter(p => p !== id);
+  _popupStack.push(id);
+}
+
+function popPopup() {
+  if (_popupStack.length === 0) return;
+  var id = _popupStack.pop();
+  if (id === 'brand-popup') closeBrandPopup({target: null, _force: true});
+  else if (id === 'drill-popup') closeDrillPopup();
+  else if (id === 'kpi-popup') closeKpiPopup();
+  else if (id === 'hist-popup') closeHistPopup();
+  else if (id === 'info-card') document.getElementById('info-card').classList.remove('active');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') popPopup();
+});
 </script>
 
 </body>
