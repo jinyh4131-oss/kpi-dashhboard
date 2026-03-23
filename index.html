@@ -2441,11 +2441,12 @@ function renderHistContent() {
 
   var valRow = '<tr>' + '<td>값</td>' + data.map(d => {
     if (d.val === null) return '<td>—</td>';
+    var fmtVal = Number.isInteger(d.val) ? d.val : parseFloat(d.val.toFixed(1));
     if (isSignal) {
-      var cls = d.val >= 15 ? 'hist-val-pos' : d.val < 0 ? 'hist-val-neg' : 'hist-val-neu';
-      return `<td><span class="${cls}">${d.val>=0?'+':''}${d.val}%</span></td>`;
+      var cls = fmtVal >= 15 ? 'hist-val-pos' : fmtVal < 0 ? 'hist-val-neg' : 'hist-val-neu';
+      return `<td><span class="${cls}">${fmtVal>=0?'+':''}${fmtVal}%</span></td>`;
     }
-    return `<td class="hist-val-score">${d.val}${kpiDef.unit}</td>`;
+    return `<td class="hist-val-score">${fmtVal}${kpiDef.unit}</td>`;
   }).join('') + '</tr>';
 
   var rankRow = '<tr>' + '<td>순위</td>' + data.map(d => {
