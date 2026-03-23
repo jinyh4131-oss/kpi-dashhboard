@@ -3841,6 +3841,12 @@ function calcAvg(kpiKey, hasSignal) {
   } else {
     var curVals = vals.filter(d => d.cur !== null).map(d => d.cur);
     if (curVals.length === 0) return null;
+    // 공실은 합산, 나머지는 평균
+    var isVacancy = kpiKey === 'vacancy' || kpiKey.startsWith('vc_floor_');
+    if (isVacancy) {
+      var total = curVals.reduce((a,b) => a+b, 0);
+      return {cur: total, prev: null, yoy: null};
+    }
     var avg = curVals.reduce((a,b)=>a+b,0) / curVals.length;
     return {cur: +avg.toFixed(1), prev: null, yoy: null};
   }
