@@ -1677,10 +1677,21 @@ function showDetail(storeName,kpiKey,scrollDown){
   else{badge.textContent='기준 설정 예정';badge.style.cssText='background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)';}
   document.getElementById('ehint').textContent=kpi.hasSignal?'당월·전년동월 입력 시 성장률 자동 계산':'기준 확정 후 신호등 자동 적용';
   var _isAreaKey=kpiKey==='sales_area'||kpiKey.startsWith('sa_floor_');
+  var _isScoreKey=kpiKey==='bcd'||kpiKey.startsWith('bcd_')||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_');
+  var _isVacancyKey=kpiKey==='vacancy'||kpiKey.startsWith('vc_floor_');
+  var _isFeeKey=kpiKey==='fee_rate'||kpiKey.startsWith('fr_');
+  function _fmtVal(v){
+    if(v===null||v===undefined) return null;
+    if(_isAreaKey) return v+'만';
+    if(_isScoreKey) return v+'점';
+    if(_isVacancyKey) return v+'개';
+    if(_isFeeKey) return v+'%';
+    return Math.round(v).toLocaleString()+'백만원';
+  }
   var items=[
     {label:kpi.hasSignal?'전년대비 성장률':'전년대비 증감',val:fmtYoy(d.yoy),color:kpi.hasSignal?c:null},
-    {label:kpi.fields[0].label,val:d.cur!==null?(_isAreaKey?d.cur+'만':Math.round(d.cur).toLocaleString()+'백만원'):null},
-    {label:kpi.fields[1].label,val:d.prev!==null?(_isAreaKey?d.prev+'만':Math.round(d.prev).toLocaleString()+'백만원'):null},
+    {label:kpi.fields[0].label,val:_fmtVal(d.cur)},
+    {label:kpi.fields[1].label,val:_fmtVal(d.prev)},
   ];
   document.getElementById('dgrid').innerHTML=items.map(it=>{
     if(it.color)return`<div class="dc" style="background:${BG[it.color]};border-color:${BG[it.color]}"><div class="dl" style="color:${LB[it.color]}">${it.label}</div><div class="dv" style="color:${TX[it.color]}">${it.val??'—'}</div></div>`;
@@ -4240,10 +4251,21 @@ function showDetail(storeName,kpiKey,scrollDown){
   else{badge.textContent='기준 설정 예정';badge.style.cssText='background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)';}
   document.getElementById('ehint').textContent=kpi.hasSignal?'당월·전년동월 입력 시 성장률 자동 계산':'기준 확정 후 신호등 자동 적용';
   var _isAreaKey=kpiKey==='sales_area'||kpiKey.startsWith('sa_floor_');
+  var _isScoreKey=kpiKey==='bcd'||kpiKey.startsWith('bcd_')||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_');
+  var _isVacancyKey=kpiKey==='vacancy'||kpiKey.startsWith('vc_floor_');
+  var _isFeeKey=kpiKey==='fee_rate'||kpiKey.startsWith('fr_');
+  function _fmtVal(v){
+    if(v===null||v===undefined) return null;
+    if(_isAreaKey) return v+'만';
+    if(_isScoreKey) return v+'점';
+    if(_isVacancyKey) return v+'개';
+    if(_isFeeKey) return v+'%';
+    return Math.round(v).toLocaleString()+'백만원';
+  }
   var items=[
     {label:kpi.hasSignal?'전년대비 성장률':'전년대비 증감',val:fmtYoy(d.yoy),color:kpi.hasSignal?c:null},
-    {label:kpi.fields[0].label,val:d.cur!==null?(_isAreaKey?d.cur+'만':Math.round(d.cur).toLocaleString()+'백만원'):null},
-    {label:kpi.fields[1].label,val:d.prev!==null?(_isAreaKey?d.prev+'만':Math.round(d.prev).toLocaleString()+'백만원'):null},
+    {label:kpi.fields[0].label,val:_fmtVal(d.cur)},
+    {label:kpi.fields[1].label,val:_fmtVal(d.prev)},
   ];
   document.getElementById('dgrid').innerHTML=items.map(it=>{
     if(it.color)return`<div class="dc" style="background:${BG[it.color]};border-color:${BG[it.color]}"><div class="dl" style="color:${LB[it.color]}">${it.label}</div><div class="dv" style="color:${TX[it.color]}">${it.val??'—'}</div></div>`;
