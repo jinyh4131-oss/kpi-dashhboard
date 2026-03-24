@@ -89,7 +89,7 @@
 .leg-div { width: 1px; height: 14px; background: var(--color-border-tertiary); }
 .scroll { overflow-x: auto; }
 table { border-collapse: collapse; white-space: nowrap; }
-.th-corner { background: #f5f5f5; border: 0.5px solid #ddd; width: 120px; min-width: 120px; }
+.th-corner { background: #f5f5f5; border: 0.5px solid #ddd; width: 120px; min-width: 120px; overflow: visible; }
 .th-hq { background: #f5f5f5; border: 0.5px solid #ddd; padding: 5px 6px; font-size: 11px; font-weight: 500; color: #666; text-align: center; transition: background 0.15s; }
 .th-hq:hover { background: #e8e8ff; color: #444; }
 .th-hq.hq-active { background: #dde4ff; color: #2244aa; font-weight: 700; border-bottom: 2px solid #4466cc; }
@@ -491,18 +491,16 @@ tr:last-child td.col-sel,tr:last-child td.col-sel-cur { border-bottom: 2px solid
   pointer-events: none;
 }
 #store-search-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 6px;
-  right: 6px;
+  position: fixed;
   background: #fff;
   border: 0.5px solid #ccc;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   z-index: 100;
-  max-height: 180px;
+  max-height: 200px;
   overflow-y: auto;
   display: none;
+  width: 200px;
 }
 #store-search-dropdown.active { display: block; }
 .search-dropdown-item {
@@ -796,7 +794,8 @@ tr:last-child td.col-sel,tr:last-child td.col-sel-cur { border-bottom: 2px solid
       <input id="store-search-input" type="text" placeholder="점포·지점장·본부 (/ 키)"
         oninput="onStoreSearch(this.value)"
         onfocus="showSearchDropdown()"
-        onblur="setTimeout(hideSearchDropdown,200)">
+        onblur="setTimeout(hideSearchDropdown,200)"
+        onkeydown="onSearchKeyDown(event)">
       <button id="store-search-clear" onclick="clearStoreSearch()" title="전체 초기화">✕</button>
       <div id="store-search-dropdown"></div>
     </div>
@@ -1032,9 +1031,45 @@ var HQ=[
 
 var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwYTFgL0Q_nq41KNznklecL6RDxUHXR9Fpuyl6ckPaeCIsgafTu_bmGIvJjBj-5N_zHMA/exec';
 var VACANCY_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwvdoK9eDIRXQGpMcq7pRINsH-JvHQzk61Ggl3boykQYBIf7QuaCodMxlsWcQV_mVBQ1A/exec';
+var SALES_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxqXizh_seMso-R5_ThEhg6bcGnY2MtwXIlUGajh69Qd2ProVpTrCDcnaF8zznxMF2MPw/exec';
 var _FORECAST_STATIC={"강서점":2.3,"부천점":7.0,"불광점":5.9,"일산점":5.0,"평촌2점":3.5,"인천점":3.1,"산본점":17.8,"고잔점":3.3,"광명점":1.6,"부평점":-5.0,"안양점":0.0,"신구로점":6.1,"강남점":0.1,"송파점":1.7,"야탑점":1.2,"분당점":-1.0,"동수원점":0.1,"중계점":4.1,"수원터미널점":1.5,"평택점":0.7,"천호2점":1.7,"대전유성점":9.5,"중앙로역점":6.8,"청주점":7.8,"충장점":7.9,"순천점":-0.8,"해운대점":5.1,"부산대점":3.0,"괴정점":0.4,"덕천점":2.9,"창원점":-2.2,"전주점":3.5,"광주역점":-5.3,"쇼핑점":5.1,"엑스코점":-7.6,"수성점":1.0,"경산점":-1.1,"구미점":1.3,"강북점":-4.3,"울산점":-10.3,"울산2점":-4.8};
 var _sheetData={},_sheetLoaded=false,_sheetLoading=false,_sheetError=null;
 
+
+
+// ── 매출성장률 데이터 로드 (구글 시트) ──
+var _salesLoaded = false, _salesLoading = false;
+
+async function loadSalesData() {
+  if (_salesLoaded || _salesLoading) return;
+  _salesLoading = true;
+  try {
+    const res = await fetch(SALES_SCRIPT_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+
+    const allStores = HQ.flatMap(h => h.stores);
+    allStores.forEach(sn => {
+      const sd = json.data[sn];
+      if (!sd) return;
+      // stores에 매출성장률 덮어쓰기
+      stores[sn]['sales_growth'] = {
+        cur:  sd.cur  !== null ? sd.cur  : null,
+        prev: sd.prev !== null ? sd.prev : null,
+        yoy:  sd.yoy  !== null ? sd.yoy  : null
+      };
+    });
+
+    _salesLoaded = true;
+    render();
+    console.log('[매출] 데이터 로드 완료:', Object.keys(json.data).length + '개 점포');
+  } catch(e) {
+    console.warn('[매출] 데이터 로드 실패:', e.message);
+  } finally {
+    _salesLoading = false;
+  }
+}
 
 // ── 공실 데이터 로드 ──
 var _vacancyData = null, _vacancyLoaded = false, _vacancyLoading = false;
@@ -1389,6 +1424,49 @@ var _selectedStores = [];
 var _recentSearches = [];  // 최근 검색 기록 (점포 조합)
 var MAX_RECENT = 5;
 
+
+// ── 메인 검색창 키보드 핸들러 (↑↓ 탐색 + 엔터 선택) ──
+var _searchFocusIdx = -1;  // 현재 포커스된 드롭다운 항목 인덱스
+
+function onSearchKeyDown(e) {
+  var dd = document.getElementById('store-search-dropdown');
+  var items = dd ? dd.querySelectorAll('.search-dropdown-item') : [];
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _searchFocusIdx = Math.min(_searchFocusIdx + 1, items.length - 1);
+    updateSearchFocus(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _searchFocusIdx = Math.max(_searchFocusIdx - 1, 0);
+    updateSearchFocus(items);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (_searchFocusIdx >= 0 && items[_searchFocusIdx]) {
+      // 포커스된 항목 선택
+      items[_searchFocusIdx].dispatchEvent(new MouseEvent('mousedown'));
+    } else if (items.length > 0) {
+      // 포커스 없으면 첫 번째 항목 선택
+      items[0].dispatchEvent(new MouseEvent('mousedown'));
+    }
+    _searchFocusIdx = -1;
+  } else if (e.key === 'Escape') {
+    hideSearchDropdown();
+    _searchFocusIdx = -1;
+  }
+}
+
+function updateSearchFocus(items) {
+  items.forEach(function(item, i) {
+    if (i === _searchFocusIdx) {
+      item.style.background = '#f0f4ff';
+      item.scrollIntoView({ block: 'nearest' });
+    } else {
+      item.style.background = '';
+    }
+  });
+}
+
 // ── 검색 후보 생성 (점포명·지점장·본부명·점포코드) ──
 function getSearchCandidates() {
   var result = [];
@@ -1408,10 +1486,19 @@ function getSearchCandidates() {
 function onStoreSearch(val) {
   var q = val.trim().toLowerCase();
   var dd = document.getElementById('store-search-dropdown');
+  // 드롭다운 위치 갱신
+  var input = document.getElementById('store-search-input');
+  if (dd && input) {
+    var rect = input.getBoundingClientRect();
+    dd.style.top = (rect.bottom + 2) + 'px';
+    dd.style.left = rect.left + 'px';
+    dd.style.width = Math.max(200, rect.width) + 'px';
+  }
   if (!q) {
     renderDropdownDefault();
     return;
   }
+  _searchFocusIdx = -1;  // 검색어 변경 시 포커스 초기화
   var candidates = getSearchCandidates().filter(c => {
     var match = c.label.toLowerCase().includes(q)
       || (c.mgr && c.mgr.toLowerCase().includes(q))
@@ -1461,6 +1548,13 @@ function renderDropdownDefault() {
 
 function showSearchDropdown() {
   var input = document.getElementById('store-search-input');
+  var dd = document.getElementById('store-search-dropdown');
+  if (dd && input) {
+    var rect = input.getBoundingClientRect();
+    dd.style.top = (rect.bottom + 2) + 'px';
+    dd.style.left = rect.left + 'px';
+    dd.style.width = Math.max(200, rect.width) + 'px';
+  }
   if (input.value.trim()) onStoreSearch(input.value);
   else renderDropdownDefault();
 }
@@ -3335,7 +3429,7 @@ render();
 .leg-div { width: 1px; height: 14px; background: var(--color-border-tertiary); }
 .scroll { overflow-x: auto; }
 table { border-collapse: collapse; white-space: nowrap; }
-.th-corner { background: #f5f5f5; border: 0.5px solid #ddd; width: 120px; min-width: 120px; }
+.th-corner { background: #f5f5f5; border: 0.5px solid #ddd; width: 120px; min-width: 120px; overflow: visible; }
 .th-hq { background: #f5f5f5; border: 0.5px solid #ddd; padding: 5px 6px; font-size: 11px; font-weight: 500; color: #666; text-align: center; transition: background 0.15s; }
 .th-hq:hover { background: #e8e8ff; color: #444; }
 .th-hq.hq-active { background: #dde4ff; color: #2244aa; font-weight: 700; border-bottom: 2px solid #4466cc; }
@@ -3905,6 +3999,7 @@ var HQ=[
 
 var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwYTFgL0Q_nq41KNznklecL6RDxUHXR9Fpuyl6ckPaeCIsgafTu_bmGIvJjBj-5N_zHMA/exec';
 var VACANCY_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwvdoK9eDIRXQGpMcq7pRINsH-JvHQzk61Ggl3boykQYBIf7QuaCodMxlsWcQV_mVBQ1A/exec';
+var SALES_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxqXizh_seMso-R5_ThEhg6bcGnY2MtwXIlUGajh69Qd2ProVpTrCDcnaF8zznxMF2MPw/exec';
 var _FORECAST_STATIC={"강서점":2.3,"부천점":7.0,"불광점":5.9,"일산점":5.0,"평촌2점":3.5,"인천점":3.1,"산본점":17.8,"고잔점":3.3,"광명점":1.6,"부평점":-5.0,"안양점":0.0,"신구로점":6.1,"강남점":0.1,"송파점":1.7,"야탑점":1.2,"분당점":-1.0,"동수원점":0.1,"중계점":4.1,"수원터미널점":1.5,"평택점":0.7,"천호2점":1.7,"대전유성점":9.5,"중앙로역점":6.8,"청주점":7.8,"충장점":7.9,"순천점":-0.8,"해운대점":5.1,"부산대점":3.0,"괴정점":0.4,"덕천점":2.9,"창원점":-2.2,"전주점":3.5,"광주역점":-5.3,"쇼핑점":5.1,"엑스코점":-7.6,"수성점":1.0,"경산점":-1.1,"구미점":1.3,"강북점":-4.3,"울산점":-10.3,"울산2점":-4.8};
 var _sheetData={},_sheetLoaded=false,_sheetLoading=false,_sheetError=null;
 
@@ -5351,6 +5446,7 @@ document.addEventListener('click', function(e) {
 
 HQ.forEach(h=>h.stores.forEach(n=>{stores[n]=makeStore(n,h.name);}));
 render();
+loadSalesData();
 loadVacancyData();
 
 
