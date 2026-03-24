@@ -1519,7 +1519,7 @@ function getSearchCandidates() {
   var result = [];
   // 선임지점장 그룹 추가
   SENIOR_MANAGERS.forEach(function(sm) {
-    result.push({ type:'senior', label: sm.name + ' 선임지점장', sub: sm.stores.join(', '), stores: sm.stores });
+    result.push({ type:'senior', label: sm.name, sub: sm.stores.join(', '), stores: sm.stores });
   });
   // 본부 단위 추가
   HQ.forEach(h => {
