@@ -1445,7 +1445,7 @@ function mkCell(d,hasSignal,level,sn,kpiKey,isHl,isForecast){
   }
   var _isArea=kpiKey==='sales_area'||kpiKey.startsWith('sa_floor_');
   var _isBcd=kpiKey==='bcd'||kpiKey.startsWith('bcd_');
-  var _isScore=_isBcd||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_');
+  var _isScore=_isBcd||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_')||kpiKey==='product_mix'||kpiKey.startsWith('pm_');
   var _isFeeRate=kpiKey==='fee_rate'||kpiKey.startsWith('fr_');
   var _dispCur=d.cur!==null?(_isArea?d.cur+'만':_isFeeRate?d.cur+'%':_isScore?d.cur+'점':d.cur):'<span style="color:#e0e0e0;font-size:13px;font-weight:300">—</span>';
   return `<td class="${base}${d.cur!==null?' tbd-filled':''}${hl}" onclick="showDetail('${sn}','${kpiKey}')" ondblclick="dblPopupOrDetail(event,'${sn}','${kpiKey}')">${_dispCur}</td>`;
@@ -1773,7 +1773,7 @@ function mkAvgCell(kpiKey, hasSignal, lv) {
     return `<td class="${base}${cc} avg-cell" style="${avgBg}">${inner}</td>`;
   }
   var _isArea = kpiKey==='sales_area'||kpiKey.startsWith('sa_floor_');
-  var _isScore = kpiKey==='bcd'||kpiKey.startsWith('bcd_')||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_');
+  var _isScore = kpiKey==='bcd'||kpiKey.startsWith('bcd_')||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_')||kpiKey==='product_mix'||kpiKey.startsWith('pm_');
   var _isFeeRateAvg = kpiKey==='fee_rate'||kpiKey.startsWith('fr_');
   var disp = _isArea ? d.cur+'만' : _isFeeRateAvg ? d.cur+'%' : _isScore ? d.cur+'점' : d.cur;
   return `<td class="${base} avg-cell tbd-filled" style="background:#f0f4ff !important;">${disp}</td>`;
@@ -4318,7 +4318,7 @@ function mkCell(d,hasSignal,level,sn,kpiKey,isHl,isForecast){
   }
   var _isArea=kpiKey==='sales_area'||kpiKey.startsWith('sa_floor_');
   var _isBcd=kpiKey==='bcd'||kpiKey.startsWith('bcd_');
-  var _isScore=_isBcd||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_');
+  var _isScore=_isBcd||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_')||kpiKey==='product_mix'||kpiKey.startsWith('pm_');
   var _isFeeRate=kpiKey==='fee_rate'||kpiKey.startsWith('fr_');
   var _dispCur=d.cur!==null?(_isArea?d.cur+'만':_isFeeRate?d.cur+'%':_isScore?d.cur+'점':d.cur):'<span style="color:#e0e0e0;font-size:13px;font-weight:300">—</span>';
   return `<td class="${base}${d.cur!==null?' tbd-filled':''}${hl}" onclick="showDetail('${sn}','${kpiKey}')" ondblclick="dblPopupOrDetail(event,'${sn}','${kpiKey}')">${_dispCur}</td>`;
