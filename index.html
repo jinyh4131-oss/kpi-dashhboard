@@ -1097,6 +1097,10 @@ async function loadSalesData() {
       };
     });
 
+    // 전체합계 yoy 저장 (전체평균 열에 직접 사용)
+    if (json.total && json.total.yoy !== null) {
+      window._salesTotalYoy = json.total.yoy;
+    }
     _salesLoaded = true;
     render();
     console.log('[매출] 데이터 로드 완료:', Object.keys(json.data).length + '개 점포');
@@ -1223,6 +1227,11 @@ function retrySheet(btn){
 }
 
 var PLANT={'강서점':'8227','부천점':'8222','불광점':'7217','인천점':'8203','광명점':'8217','산본점':'8215','일산점':'8201','평촌2점':'8205','고잔점':'7219','부평점':'7216','신구로점':'8242','강남점':'8206','송파점':'8224','야탑점':'8202','분당점':'7209','동수원점':'8208','중계점':'7204','수원터미널점':'8237','평택점':'8204','천호2점':'7215','대전유성점':'8243','중앙로역점':'8235','청주점':'8241','충장점':'8228','순천점':'8212','해운대점':'7214','부산대점':'8229','괴정점':'8218','덕천점':'8223','창원점':'8220','전주점':'8230','쇼핑점':'8501','수성점':'8502','구미점':'8503','울산점':'8216','울산2점':'8219','강북점':'8504','경산점':'8239','엑스코점':'8231','안양점':'7206','광주역점':'8233'};
+
+// ── 선임지점장 그룹 데이터 (변경 시 이곳 수정) ──
+var SENIOR_MANAGERS = [
+  { name: '선임지점장', stores: ['강서점', '신구로점', '대전유성점', '쇼핑점'] }
+];
 
 var managers={"안양점":"송승훈","강서점":"임성환","부천점":"강한홍","불광점":"오선영","일산점":"이승희","평촌2점":"김정석","인천점":"임경섭","산본점":"홍민기","고잔점":"이장환","광명점":"박명균","부평점":"조계명","신구로점":"이승현","강남점":"이관영","송파점":"주정동","야탑점":"박찬욱","분당점":"이승훈","동수원점":"최홍재","중계점":"김보승","수원터미널점":"김남원","평택점":"박종춘","천호2점":"김문찬","대전유성점":"오용화","중앙로역점":"고동준","청주점":"윤병호","충장점":"최진영","순천점":"황승진","해운대점":"문홍신","부산대점":"박종찬","괴정점":"박상신","덕천점":"김대원","창원점":"이학현","전주점":"공석재","광주역점":"나은성","쇼핑점":"고재은","엑스코점":"고재은","수성점":"정학재","경산점":"정학재","구미점":"이경표","강북점":"지병희","울산점":"김현목","울산2점":"박형찬"};HQ.forEach(h=>h.stores.forEach(n=>{if(!(n in managers))managers[n]='';}));
 
@@ -1508,6 +1517,10 @@ function updateSearchFocus(items) {
 // ── 검색 후보 생성 (점포명·지점장·본부명·점포코드) ──
 function getSearchCandidates() {
   var result = [];
+  // 선임지점장 그룹 추가
+  SENIOR_MANAGERS.forEach(function(sm) {
+    result.push({ type:'senior', label: sm.name + ' 선임지점장', sub: sm.stores.join(', '), stores: sm.stores });
+  });
   // 본부 단위 추가
   HQ.forEach(h => {
     result.push({ type:'hq', label: h.name, sub: h.stores.length+'개 점포', stores: h.stores });
@@ -1516,7 +1529,12 @@ function getSearchCandidates() {
   HQ.flatMap(h => h.stores).forEach(sn => {
     var mgr = (managers && managers[sn]) || '';
     var code = (PLANT && PLANT[sn]) || '';
-    result.push({ type:'store', label: sn, sub: mgr + (code?' ('+code+')':''), store: sn, mgr, code });
+    // 선임지점장 이름 찾기
+    var senior = '';
+    SENIOR_MANAGERS.forEach(function(sm) {
+      if (sm.stores.indexOf(sn) >= 0) senior = sm.name;
+    });
+    result.push({ type:'store', label: sn, sub: mgr + (code?' ('+code+')':''), store: sn, mgr, code, senior });
   });
   return result;
 }
@@ -1540,9 +1558,11 @@ function onStoreSearch(val) {
   var candidates = getSearchCandidates().filter(c => {
     var match = c.label.toLowerCase().includes(q)
       || (c.mgr && c.mgr.toLowerCase().includes(q))
-      || (c.code && c.code.toLowerCase().includes(q));
+      || (c.code && c.code.toLowerCase().includes(q))
+      || (c.senior && c.senior.toLowerCase().includes(q));
     if (c.type === 'store') return match && !_selectedStores.includes(c.store);
     if (c.type === 'hq') return match;
+    if (c.type === 'senior') return match;
     return false;
   });
 
@@ -1550,6 +1570,13 @@ function onStoreSearch(val) {
     dd.innerHTML = '<div style="padding:8px 10px;font-size:10px;color:#aaa">검색 결과 없음</div>';
   } else {
     dd.innerHTML = candidates.map(c => {
+      if (c.type === 'senior') {
+        var storeList = JSON.stringify(c.stores);
+        return `<div class="search-dropdown-item sdi-hq" onmousedown="selectStoreList(${storeList})">
+          <span class="sdi-store">👔 ${c.label}</span>
+          <span class="sdi-mgr">${c.sub}</span>
+        </div>`;
+      }
       if (c.type === 'hq') {
         return `<div class="search-dropdown-item sdi-hq" onmousedown="selectHq('${c.label}')">
           <span class="sdi-badge">본부</span>
@@ -1609,6 +1636,20 @@ function selectStore(storeName) {
   if (input) input.value = '';
   hideSearchDropdown();
   renderSearchTags();
+  render();
+}
+
+function selectStoreList(storeList) {
+  // 선임지점장 담당 점포 전체 선택
+  storeList.forEach(function(sn) {
+    if (_selectedStores.indexOf(sn) < 0) {
+      _selectedStores.push(sn);
+      addRecentSearch(sn);
+    }
+  });
+  var input = document.getElementById('store-search-input');
+  if (input) input.value = '';
+  hideSearchDropdown();
   render();
 }
 
@@ -1723,13 +1764,23 @@ function calcAvg(kpiKey, hasSignal) {
   var hqStores = HQ.flatMap(h => h.stores);
 
   if (hasSignal && kpiKey === 'sales_growth') {
-    // 매출성장률: stores(HQ) + hidden 점포의 DATA 원본값으로 가중평균
-    var dataKey = KEY_TO_DATA[kpiKey]; // '매출성장률'
+    // 전체평균: Apps Script 전체합계행 yoy 직접 사용 (백데이터와 동일)
+    if (window._salesTotalYoy !== undefined && window._salesTotalYoy !== null) {
+      return { cur: null, prev: null, yoy: window._salesTotalYoy };
+    }
+    // fallback: 점포별 cur/prev 가중평균
+    var dataKey = KEY_TO_DATA[kpiKey];
     var allStores = [...hqStores, ...HIDDEN_STORES];
     var totalCur = 0, totalPrev = 0;
-    allStores.forEach(n => {
-      var d = DATA[n] && DATA[n][dataKey];
-      if (d) { totalCur += (d.cur || 0); totalPrev += (d.prev || 0); }
+    allStores.forEach(function(n) {
+      var sd = stores[n] && stores[n]['sales_growth'];
+      if (sd && sd.cur !== null && sd.prev !== null) {
+        totalCur  += sd.cur  || 0;
+        totalPrev += sd.prev || 0;
+      } else {
+        var d = DATA[n] && DATA[n][dataKey];
+        if (d) { totalCur += (d.cur || 0); totalPrev += (d.prev || 0); }
+      }
     });
     if (totalPrev === 0) return null;
     var yoy = +((totalCur / totalPrev - 1) * 100).toFixed(1);
