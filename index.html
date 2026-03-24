@@ -1447,6 +1447,7 @@ function mkCell(d,hasSignal,level,sn,kpiKey,isHl,isForecast){
   var _isBcd=kpiKey==='bcd'||kpiKey.startsWith('bcd_');
   var _isScore=_isBcd||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_')||kpiKey==='product_mix'||kpiKey.startsWith('pm_');
   var _isFeeRate=kpiKey==='fee_rate'||kpiKey.startsWith('fr_');
+  var _isVacancyKey=kpiKey==='vacancy'||kpiKey.startsWith('vc_floor_');
   var _dispCur=(d.cur!==null&&!((_isVacancyKey&&kpiKey!=='vacancy')&&d.cur===0))?(_isArea?d.cur+'만':_isFeeRate?d.cur+'%':_isScore?d.cur+'점':d.cur):'<span style="color:#e0e0e0;font-size:13px;font-weight:300">—</span>';
   var _showFilled = d.cur!==null && !((_isVacancyKey&&kpiKey!=='vacancy')&&d.cur===0);
   return `<td class="${base}${_showFilled?' tbd-filled':''}${hl}" onclick="showDetail('${sn}','${kpiKey}')" ondblclick="dblPopupOrDetail(event,'${sn}','${kpiKey}')">${_dispCur}</td>`;
@@ -4321,6 +4322,7 @@ function mkCell(d,hasSignal,level,sn,kpiKey,isHl,isForecast){
   var _isBcd=kpiKey==='bcd'||kpiKey.startsWith('bcd_');
   var _isScore=_isBcd||kpiKey==='bms'||kpiKey.startsWith('bms_')||kpiKey==='sod'||kpiKey.startsWith('sod_')||kpiKey==='online_ratio'||kpiKey.startsWith('online_')||kpiKey==='product_mix'||kpiKey.startsWith('pm_');
   var _isFeeRate=kpiKey==='fee_rate'||kpiKey.startsWith('fr_');
+  var _isVacancyKey=kpiKey==='vacancy'||kpiKey.startsWith('vc_floor_');
   var _dispCur=(d.cur!==null&&!((_isVacancyKey&&kpiKey!=='vacancy')&&d.cur===0))?(_isArea?d.cur+'만':_isFeeRate?d.cur+'%':_isScore?d.cur+'점':d.cur):'<span style="color:#e0e0e0;font-size:13px;font-weight:300">—</span>';
   var _showFilled = d.cur!==null && !((_isVacancyKey&&kpiKey!=='vacancy')&&d.cur===0);
   return `<td class="${base}${_showFilled?' tbd-filled':''}${hl}" onclick="showDetail('${sn}','${kpiKey}')" ondblclick="dblPopupOrDetail(event,'${sn}','${kpiKey}')">${_dispCur}</td>`;
