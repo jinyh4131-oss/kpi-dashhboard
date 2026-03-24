@@ -1642,14 +1642,12 @@ function selectStore(storeName) {
 
 function selectStoreList(storeList) {
   storeList.forEach(function(sn) {
-    if (_selectedStores.indexOf(sn) < 0) {
-      _selectedStores.push(sn);
-      addRecentSearch(sn);
-    }
+    if (_selectedStores.indexOf(sn) < 0) _selectedStores.push(sn);
   });
   var input = document.getElementById('store-search-input');
   if (input) input.value = '';
   hideSearchDropdown();
+  saveRecentSearch();
   render();
 }
 
@@ -1658,14 +1656,12 @@ function selectSeniorGroup(idx) {
   var sm = SENIOR_MANAGERS[idx];
   if (!sm) return;
   sm.stores.forEach(function(sn) {
-    if (_selectedStores.indexOf(sn) < 0) {
-      _selectedStores.push(sn);
-      addRecentSearch(sn);
-    }
+    if (_selectedStores.indexOf(sn) < 0) _selectedStores.push(sn);
   });
   var input = document.getElementById('store-search-input');
   if (input) input.value = '';
   hideSearchDropdown();
+  saveRecentSearch();
   render();
 }
 
