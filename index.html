@@ -4385,6 +4385,11 @@ function calcAvg(kpiKey, hasSignal) {
   var hqStores = HQ.flatMap(h => h.stores);
 
   if (hasSignal && kpiKey === 'sales_growth') {
+    // 전체평균: Apps Script 전체합계행 yoy 직접 사용 (백데이터와 동일)
+    if (window._salesTotalYoy !== undefined && window._salesTotalYoy !== null) {
+      return { cur: null, prev: null, yoy: window._salesTotalYoy };
+    }
+    // fallback: DATA 객체 가중평균
     var dataKey = KEY_TO_DATA[kpiKey];
     var allStores = [...hqStores, ...HIDDEN_STORES];
     var totalCur = 0, totalPrev = 0;
