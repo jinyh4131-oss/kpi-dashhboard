@@ -1571,8 +1571,9 @@ function onStoreSearch(val) {
   } else {
     dd.innerHTML = candidates.map(c => {
       if (c.type === 'senior') {
-        var storeList = JSON.stringify(c.stores);
-        return `<div class="search-dropdown-item sdi-hq" onmousedown="selectStoreList(${storeList})">
+        // 따옴표 충돌 방지: SENIOR_MANAGERS 인덱스로 참조
+        var smIdx = SENIOR_MANAGERS.findIndex(function(sm){ return sm.name === c.label; });
+        return `<div class="search-dropdown-item sdi-hq" onmousedown="selectSeniorGroup(${smIdx})">
           <span class="sdi-store">👔 ${c.label}</span>
           <span class="sdi-mgr">${c.sub}</span>
         </div>`;
@@ -1640,8 +1641,23 @@ function selectStore(storeName) {
 }
 
 function selectStoreList(storeList) {
-  // 선임지점장 담당 점포 전체 선택
   storeList.forEach(function(sn) {
+    if (_selectedStores.indexOf(sn) < 0) {
+      _selectedStores.push(sn);
+      addRecentSearch(sn);
+    }
+  });
+  var input = document.getElementById('store-search-input');
+  if (input) input.value = '';
+  hideSearchDropdown();
+  render();
+}
+
+function selectSeniorGroup(idx) {
+  // SENIOR_MANAGERS 인덱스로 담당 점포 전체 선택
+  var sm = SENIOR_MANAGERS[idx];
+  if (!sm) return;
+  sm.stores.forEach(function(sn) {
     if (_selectedStores.indexOf(sn) < 0) {
       _selectedStores.push(sn);
       addRecentSearch(sn);
