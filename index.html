@@ -1055,12 +1055,12 @@ async function loadAssortmentData() {
     allStores.forEach(function(sn) {
       const d = json.data[sn];
       if (!d) return;
-      // 상품구색 4개 항목 주입
-      stores[sn]['assortment']       = { cur: d.total,    yoy: null };
-      stores[sn]['assort_discount']  = { cur: d.discount, yoy: null };
-      stores[sn]['assort_fresh']     = { cur: d.fresh,    yoy: null };
-      stores[sn]['assort_season']    = { cur: d.season,   yoy: null };
-      stores[sn]['assort_best']      = { cur: d.best,     yoy: null };
+      // 상품구색 4개 항목 주입 (KPI 키: product_mix, pm_*)
+      stores[sn]['product_mix']         = { cur: d.total,    yoy: null };
+      stores[sn]['pm_할인율점수']        = { cur: d.discount, yoy: null };
+      stores[sn]['pm_상품신선도']        = { cur: d.fresh,    yoy: null };
+      stores[sn]['pm_시즌적합도']        = { cur: d.season,   yoy: null };
+      stores[sn]['pm_베스트상품점수']    = { cur: d.best,     yoy: null };
     });
 
     _assortLoaded = true;
